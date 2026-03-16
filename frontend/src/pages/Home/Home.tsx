@@ -6,25 +6,18 @@ import { Card, Input, Button, Typography, Space } from "antd";
 const { Title, Text } = Typography;
 
 export default function Home({ socket }: { socket: Socket }) {
-  const [myId, setMyId] = useState("");
-  const [targetId, setTargetId] = useState("");
+
+  const [username, setUsername] = useState("");
+  const [targetUsername, setTargetUsername] = useState("");
+  const [joined, setJoined] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
 
-    if (socket.connected) {
-      setMyId(socket.id || "");
-    }
-
-    socket.on("connect", () => {
-      setMyId(socket.id || "");
-    });
-
     socket.on("chat-start", () => {
-      navigate(`/chat/${targetId}`);
+      navigate(`/chat/${targetUsername}`);
     });
-
 
     socket.on("incoming-chat", ({ from }) => {
       navigate(`/chat/${from}`);
@@ -35,53 +28,98 @@ export default function Home({ socket }: { socket: Socket }) {
     });
 
     return () => {
-      socket.off("connect");
       socket.off("chat-start");
       socket.off("incoming-chat");
       socket.off("user-not-found");
     };
-  }, [socket, targetId, navigate]);
+
+  }, [socket, targetUsername, navigate]);
+
+
+  const joinChat = () => {
+
+    if (!username) return;
+
+    socket.emit("join", {
+      username,
+    });
+
+    setJoined(true);
+  };
+
 
   const connectUser = () => {
-    if (!targetId) return;
+
+    if (!targetUsername) return;
 
     socket.emit("connect-user", {
-      targetId,
+      targetUsername,
     });
+
   };
+
 
   return (
     <div className="home-main-div">
+
       <Card className="home-main-div-card">
+
         <Space className="home-main-div-card-space" direction="vertical" size="large">
 
           <Title level={3}>Chat App</Title>
 
-          <div>
-            <Text type="secondary">Your ID</Text>
-            <br />
-            <Text copyable strong>
-              {myId}
-            </Text>
-          </div>
+          {!joined && (
+            <>
+              <div>
+                <Text type="secondary">Enter Your Name</Text>
+              </div>
 
-          <Input
-            placeholder="Enter user ID"
-            value={targetId}
-            onChange={(e: any) => setTargetId(e.target.value)}
-          />
+              <Input
+                placeholder="Your username"
+                value={username}
+                onChange={(e: any) => setUsername(e.target.value)}
+              />
 
-          <Button
-            type="primary"
-            block
-            onClick={connectUser}
-            disabled={!targetId}
-          >
-            Connect
-          </Button>
+              <Button
+                type="primary"
+                block
+                onClick={joinChat}
+                disabled={!username}
+              >
+                Join Chat
+              </Button>
+            </>
+          )}
+
+          {joined && (
+            <>
+              <div>
+                <Text type="secondary">
+                  Logged in as: <strong>{username}</strong>
+                </Text>
+              </div>
+
+              <Input
+                placeholder="Enter username to connect"
+                value={targetUsername}
+                onChange={(e: any) => setTargetUsername(e.target.value)}
+              />
+
+              <Button
+                type="primary"
+                block
+                onClick={connectUser}
+                disabled={!targetUsername}
+              >
+                Connect
+              </Button>
+            </>
+          )}
 
         </Space>
+
       </Card>
+
     </div>
   );
 }

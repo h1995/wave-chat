@@ -21,12 +21,12 @@ const chatService = new ChatService();
 
 io.on("connection", (socket: ChatSocket) => {
 
-    console.log(`User connected: ${socket.id}`);
+    socket.on("join", ({ username }) => {
+        chatService.addUser(socket, username);
+    });
 
-    chatService.addUser(socket);
-
-    socket.on("connect-user", ({ targetId }) => {
-        chatService.connectUsers(socket, targetId);
+    socket.on("connect-user", ({ targetUsername }) => {
+        chatService.connectUsers(socket, targetUsername);
     });
 
     socket.on("send-message", ({ message }) => {

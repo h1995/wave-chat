@@ -4,30 +4,33 @@ export class ChatService {
 
     private users = new Map<string, ChatSocket>();
 
-    addUser(socket: ChatSocket) {
+    addUser(socket: ChatSocket, username: string) {
+        socket.username = username;
         this.users.set(socket.id, socket);
+
     }
 
     removeUser(socketId: string) {
         this.users.delete(socketId);
     }
 
-    connectUsers(socket: ChatSocket, targetId: string) {
+    connectUsers(socket: ChatSocket, targetUsername: string) {
 
-        const targetSocket = this.users.get(targetId);
+        const targetSocketArr = [...this.users.values()];
+        const targetSocket = targetSocketArr.find(user => user.username === targetUsername);
 
         if (!targetSocket) {
             socket.emit("user-not-found");
             return;
         }
 
-        socket.partnerId = targetId;
+        socket.partnerId = targetSocket.id;
         targetSocket.partnerId = socket.id;
 
         socket.emit("chat-start");
 
         targetSocket.emit("incoming-chat", {
-            from: socket.id
+            from: socket.username
         });
     }
 
@@ -52,7 +55,7 @@ export class ChatService {
         const partner = this.users.get(partnerId);
 
         partner?.emit("chat-ended");
-
+        socket.emit("chat-ended");
         if (partner) partner.partnerId = undefined;
 
         socket.partnerId = undefined;

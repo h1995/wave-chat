@@ -10,10 +10,10 @@ describe("ChatService", () => {
         const socketA: any = { id: "A", emit: () => { } };
         const socketB: any = { id: "B", emit: () => { } };
 
-        chat.addUser(socketA);
-        chat.addUser(socketB);
+        chat.addUser(socketA, "Alice");
+        chat.addUser(socketB, "Bob");
 
-        chat.connectUsers(socketA, "B");
+        chat.connectUsers(socketA, "Bob");
 
         expect(socketA.partnerId).toBe("B");
         expect(socketB.partnerId).toBe("A");
@@ -28,7 +28,7 @@ describe("ChatService", () => {
 
         const socket: any = { id: "A", emit: emitMock };
 
-        chat.addUser(socket);
+        chat.addUser(socket, "Alice");
 
         chat.connectUsers(socket, "B");
 
@@ -46,11 +46,13 @@ describe("ChatService", () => {
         const socketA: any = { id: "A", emit: emitA };
         const socketB: any = { id: "B", emit: emitB };
 
-        chat.addUser(socketA);
-        chat.addUser(socketB);
+        chat.addUser(socketA, "Alice");
+        chat.addUser(socketB, "Bob");
 
-        chat.connectUsers(socketA, "B");
+        // connect them first
+        chat.connectUsers(socketA, "Bob");
 
+        // send message
         chat.sendMessage(socketA, "Hello");
 
         expect(emitB).toHaveBeenCalledWith("receive-message", {
@@ -70,11 +72,13 @@ describe("ChatService", () => {
         const socketA: any = { id: "A", emit: emitA };
         const socketB: any = { id: "B", emit: emitB };
 
-        chat.addUser(socketA);
-        chat.addUser(socketB);
+        chat.addUser(socketA, "Alice");
+        chat.addUser(socketB, "Bob");
 
-        chat.connectUsers(socketA, "B");
+        // connect them first
+        chat.connectUsers(socketA, "Bob");
 
+        // now disconnect
         chat.disconnect(socketA);
 
         expect(emitB).toHaveBeenCalledWith("chat-ended");
