@@ -1,13 +1,5 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
 node_modules
+package-lock.json
 dist
 dist-ssr
 *.local
@@ -22,3 +14,33 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# build output
+dist/
+build/
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# environment files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# editor files
+.vscode/
+.idea/
+
+# coverage (tests)
+coverage/
+
+# TypeScript cache
+*.tsbuildinfo

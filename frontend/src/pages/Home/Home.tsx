@@ -68,7 +68,7 @@ export default function Home({ socket }: { socket: Socket }) {
           <Input
             placeholder="Enter user ID"
             value={targetId}
-            onChange={(e) => setTargetId(e.target.value)}
+            onChange={(e: any) => setTargetId(e.target.value)}
           />
 
           <Button
