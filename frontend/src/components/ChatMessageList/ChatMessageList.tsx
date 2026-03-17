@@ -15,13 +15,7 @@ export default function ChatMessageList({ messages, myId }: Props) {
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-
-        const nearBottom =
-            container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-
-        if (nearBottom) {
-            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-        }
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
     return (
