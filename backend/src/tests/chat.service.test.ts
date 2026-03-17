@@ -1,88 +1,63 @@
-import { describe, it, expect, vi } from "vitest";
-import { ChatService } from "../services/chat.service";
+import { describe, it, expect, beforeEach } from "vitest";
+import { ChatService } from "../modules/chat/chat.service";
+import { ChatStore } from "../modules/chat/chat.store";
 
 describe("ChatService", () => {
+    let service: ChatService;
+    let store: ChatStore;
 
-    it("should connect users", () => {
-
-        const chat = new ChatService();
-
-        const socketA: any = { id: "A", emit: () => { } };
-        const socketB: any = { id: "B", emit: () => { } };
-
-        chat.addUser(socketA, "Alice");
-        chat.addUser(socketB, "Bob");
-
-        chat.connectUsers(socketA, "Bob");
-
-        expect(socketA.partnerId).toBe("B");
-        expect(socketB.partnerId).toBe("A");
-
+    beforeEach(() => {
+        store = new ChatStore();
+        service = new ChatService(store);
     });
 
-    it("should emit user-not-found if target does not exist", () => {
+    it("should connect users", () => {
+        service.addUser("A", "Alice");
+        service.addUser("B", "Bob");
 
-        const chat = new ChatService();
+        const result = service.connectUsers("A", "Bob");
 
-        const emitMock = vi.fn();
+        expect(result.success).toBe(true);
 
-        const socket: any = { id: "A", emit: emitMock };
+        const userA = store.getUser("A");
+        const userB = store.getUser("B");
 
-        chat.addUser(socket, "Alice");
+        expect(userA?.partnerId).toBe("B");
+        expect(userB?.partnerId).toBe("A");
+    });
 
-        chat.connectUsers(socket, "B");
+    it("should return error if user not found", () => {
+        service.addUser("A", "Alice");
 
-        expect(emitMock).toHaveBeenCalledWith("user-not-found");
+        const result = service.connectUsers("A", "Unknown");
 
+        expect(result.success).toBe(false);
     });
 
     it("should send message to partner", () => {
+        service.addUser("A", "Alice");
+        service.addUser("B", "Bob");
 
-        const chat = new ChatService();
+        service.connectUsers("A", "Bob");
 
-        const emitA = vi.fn();
-        const emitB = vi.fn();
+        const result = service.sendMessage("A", "Hello");
 
-        const socketA: any = { id: "A", emit: emitA };
-        const socketB: any = { id: "B", emit: emitB };
-
-        chat.addUser(socketA, "Alice");
-        chat.addUser(socketB, "Bob");
-
-        // connect them first
-        chat.connectUsers(socketA, "Bob");
-
-        // send message
-        chat.sendMessage(socketA, "Hello");
-
-        expect(emitB).toHaveBeenCalledWith("receive-message", {
-            message: "Hello",
-            from: "A"
-        });
-
+        expect(result?.to).toBe("B");
+        expect(result?.message).toBe("Hello");
     });
 
-    it("should notify partner when user disconnects", () => {
+    it("should notify partner on disconnect (logic level)", () => {
+        service.addUser("A", "Alice");
+        service.addUser("B", "Bob");
 
-        const chat = new ChatService();
+        service.connectUsers("A", "Bob");
 
-        const emitA = vi.fn();
-        const emitB = vi.fn();
+        const result = service.disconnect("A");
 
-        const socketA: any = { id: "A", emit: emitA };
-        const socketB: any = { id: "B", emit: emitB };
+        expect(result?.partnerId).toBe("B");
 
-        chat.addUser(socketA, "Alice");
-        chat.addUser(socketB, "Bob");
+        const userB = store.getUser("B");
 
-        // connect them first
-        chat.connectUsers(socketA, "Bob");
-
-        // now disconnect
-        chat.disconnect(socketA);
-
-        expect(emitB).toHaveBeenCalledWith("chat-ended");
-
+        expect(userB?.partnerId).toBeUndefined();
     });
-
 });
